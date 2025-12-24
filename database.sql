@@ -1,5 +1,5 @@
 CREATE DATABASE Smart_Wallet_V2 ;
-
+use Smart_Wallet_V2;
 CREATE TABLE users(
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100) NOT NULL,
@@ -22,8 +22,8 @@ CREATE TABLE incomes(
     user_id INT NOT NULL,
     categorie_id INT NOT NULL,
 
-    FOREIGN KEY (categorie_id) REFERENCES categories,
-    FOREIGN KEY (user_id) REFERENCES users
+    FOREIGN KEY (categorie_id) REFERENCES categories(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE expenses(
@@ -34,8 +34,8 @@ CREATE TABLE expenses(
     user_id INT NOT NULL,
     categorie_id INT NOT NULL,
 
-    FOREIGN KEY (user_id) REFERENCES users,
-    FOREIGN KEY (categorie_id) REFERENCES categories
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (categorie_id) REFERENCES categories(id)
 );
 
 
