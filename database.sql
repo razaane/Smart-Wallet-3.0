@@ -38,4 +38,11 @@ CREATE TABLE expenses(
     FOREIGN KEY (categorie_id) REFERENCES categories(id)
 );
 
-
+INSERT INTO categories (id,name_type) VALUES
+    (1,"Food"),
+    (2,"Transport"),
+    (3,'Utilities'),
+    (4,'Entertainment'),
+    (5,'Health'),
+    (6,'Education'),
+    (7,'Shopping')

@@ -5,7 +5,7 @@ class Database {
     private const USER = "root";
     private const PASSWORD = "";
     private PDO $connect ; 
-    public function __construt(){
+    public function __construct(){
         $pdo = "mysql:host =" . self::HOST . ";dbname" . self::DB_NAME;
         try{
             $this->connect = new PDO($pdo, self::USER, self::PASSWORD);
