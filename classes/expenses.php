@@ -34,8 +34,8 @@ class Expence{
         $stmt->execute([$categorie_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    public function delete($id,$montant,$la_date,$descreption,$categorie_id){
-        $stmt=$this->pdo->prepare("DELETE * FROM expenses WHERE id=?");
+    public function delete($id){
+        $stmt=$this->pdo->prepare("DELETE FROM expenses WHERE id=?");
         return $stmt->execute([$id]);
     }
 }

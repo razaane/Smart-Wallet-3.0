@@ -12,8 +12,8 @@ class Income {
         $this->pdo = $pdo;
     }
 
-    public function create($montant,$la_date,$descreption,$user_id,$categorie_id) {
-        $stmt = $this->pdo->prepare("INSERT INTO incomes (montant,la_date,descreption,user_id,categorie_id) VALUES (?, ?, ?, ? ,?)");
+    public function create(float $montant,string $la_date,string $descreption,int $user_id,int $categorie_id):bool {
+$stmt = $this->pdo->prepare("INSERT INTO incomes (montant,la_date,descreption,user_id,categorie_id) VALUES (?, ?, ?, ? ,?)");
         return $stmt->execute([$montant,$la_date,$descreption,$user_id,$categorie_id]);
     }
 
@@ -38,7 +38,7 @@ class Income {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     public function delete($id,$montant,$la_date,$descreption,$categorie_id){
-        $stmt=$this->pdo->prepare("DELETE * FROM incomes WHERE id=?");
+        $stmt=$this->pdo->prepare("DELETE FROM incomes WHERE id=?");
         return $stmt->execute([$id]);
     }
 

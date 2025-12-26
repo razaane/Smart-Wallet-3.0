@@ -1,10 +1,17 @@
 <?php
 session_start();
-include 'connexion.php';
 
 
 class Users {
-    private $pdo;
+    private PDO $pdo;
+
+    private int $id;
+    private string $username;
+    private string $fullname;
+    private string $email;
+    private string $password;
+    
+
     
 
     public function __construct($pdo){
@@ -14,7 +21,7 @@ class Users {
     public function register($username,$fullname, $email, $password){
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $this->pdo->prepare(
-            "INSERT INTO users (username,fullname, email, password) VALUES (?, ?, ?)");
+            "INSERT INTO users (username,fullname, email, password) VALUES (?, ?, ?, ?)");
         try{
             return $stmt->execute([$username,$fullname, $email, $hash]);
 
@@ -31,8 +38,8 @@ class Users {
         if (isset($user) && password_verify($password, $user['password'])) {
 
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_nom'] = $user['fullname'];
-            header('Location: dashbord.php');
+            $_SESSION['user_name'] = $user['fullname'];
+            header('Location: index.php');
             exit;
 
         }else{

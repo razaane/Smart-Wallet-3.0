@@ -4,33 +4,17 @@ include 'database.php';
 
 
 class Category {
-    private int $id ;
-    private string $name ;
-
     private PDO $db ;
 
-    public function __construct(int $id,string $name){
-        $std = new Database();
-        $this->db=$std->getConnection();
-        $this->id =$id;
-        $this->name =$name;
-    }
-    public function getId():int{
-        return $this->id;
-    }
-    public function getName():string{
-        return $this->name;
+    public function __construct(PDO $pdo){
+        $this->db=$pdo;
     }
 
-    public function getAll():array{
-        $stmt = $this->db->prepare("SELECT * FROM categories");
-        $stmt->execute();
+    public function getAll(string $category_type): ? array{
+        $stmt = $this->db->prepare("SELECT id,name_type FROM categories WHERE category_type = ? ");
+        $stmt->execute([$category_type]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $categories = [];
-        foreach($rows as $row){
-            $categories[] = new Category($row['id'],$row['name_type']);
-        }
-        return $categories;
+        return $rows;
     }
 }

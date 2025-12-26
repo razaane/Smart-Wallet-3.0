@@ -1,9 +1,12 @@
 <?php
-$user=new Users($pdo);
+require"classes/user.php";
+require"database.php";
+$pdo = new Database();
+$pdo = $pdo->getConnection();
+$user = new Users($pdo);
     if($_SERVER['REQUEST_METHOD']==='POST'){
         $email=$_POST['email'];
         $password=$_POST['password'];
-
         $user->login($email,$password);
     }
 
@@ -51,11 +54,8 @@ $user=new Users($pdo);
     <div class="bg-[color:var(--card-bg)] rounded-2xl p-8 shadow-lg border border-gray-100 dark:border-gray-800">
       <form method="POST" action="login.php">
         <div class="space-y-4">
-            <?php if (!empty($message)): ?>
                 <div class="mb-4 text-red-600 font-medium">
-                    <?php echo $message ?>;
                 </div>
-            <?php endif;?>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
             <input type="email" name="email" required 

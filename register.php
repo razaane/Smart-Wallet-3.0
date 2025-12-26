@@ -1,5 +1,35 @@
+<?php
+require "classes/user.php";
+require "database.php";
 
+$db = new Database();
+$pdo = $db->getConnection();
 
+$user = new Users($pdo);
+
+$error = "";
+
+if(isset($_POST['submit'])){
+    $username =$_POST['username'];
+    $fullname = $_POST['fullname'];
+    $email    = $_POST['email'];
+    $password = $_POST['password'];
+    $confirm  = $_POST['confirm_password'];
+
+    if ($password !== $confirm) {
+        $error = "Passwords do not match!";
+    } else {
+        $result = $user->register($username, $fullname, $email, $password);
+
+        if ($result) {
+            header("Location: login.php");
+            exit;
+        } else {
+            $error = "Registration failed!";
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en" class="light">
 <head>
@@ -63,11 +93,12 @@
 
       <form method="POST" action="register.php">
         <div class="space-y-4">
-            <?php if (!empty($message)): ?>
+            <?php if (!empty($error)): ?>
                 <div class="mb-4 text-red-600 font-medium">
-                    <?php echo $message ?>;
+                    <?php echo $error ?>;
                 </div>
             <?php endif;?>
+                </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Username *</label>

@@ -1,75 +1,43 @@
 <?php
-require"classes/user.php";
-require"connexion.php";
-require"classes/incomes.php";
+require "classes/user.php";
+require "classes/incomes.php";
+require "classes/expenses.php";
+require "classes/category.php";
+require "classes/dashboard.php";
 
 
-session_start();
-$user = new Users($pdo);
-    if($_SERVER['REQUEST_METHOD']==='POST'){
-        $name=$_POST['nom'];
-        $email=$_POST['email'];
-        $password=$_POST['password'];
+$db = new Database();
+$pdo = $db->getConnection();
 
-        $user->register($name,$email,$password);
-        header('Location: login.php');
-        exit;
-    }
-$user_id =$_SESSION['user_id'];
+$user_id = $_SESSION['user_id'];
 
+$categorieObjet = new Category($pdo);
+
+$incomeCategory = $categorieObjet->getAll('income');
+$expenseCategory = $categorieObjet->getAll('expense');
 $incomeObjet = new Income($pdo);
-$result_incomes = $incomeObjet->getAll($user_id);
+$expencesObjet = new Expence($pdo);
 
-$total_incomes =0;
-foreach($result_incomes as $income){
-    $total_incomes += $income['montant'];
+if (isset($_POST['amount_inc'])) {
+  $montant = $_POST['amount_inc'];
+  $la_date = $_POST['date_inc'];
+  $descreption = $_POST['descreption_inc'];
+  $type_category = $_POST['category_type'];
+  $incomeObjet->create($montant, $la_date, $descreption, $user_id, $type_category);
 }
 
+if(isset($_POST['amount_exp'])){
+  $montant =$_POST['amount_exp'];
+  $la_date =$_POST['date_exp'];
+  $descreption =$_POST['descreption_exp'];
+  $type_category =$_POST['category_type'];
+  $expencesObjet->create($montant,$la_date,$descreption,$user_id,$type_category);
+}
 
-// $category = new Category();
-// $categories =$category->getAll();
-
-// if (!isset($_SESSION['logged_in'])) {
-//   header("Location: login.php");
-//   exit;
-// }
-
-// $stmt_rev = $pdo->query("SELECT SUM(montant) AS total_rev FROM incomes");
-// $row = $stmt_rev->fetch(PDO::FETCH_ASSOC);
-// $total_rev = $row['total_rev'];
-// if (!$total_rev) {
-//   $total_rev = 0;
-// }
-
-// $stmt_exp = $pdo->query("SELECT SUM(montant) AS total_exp FROM expenses");
-// $roow = $stmt_exp->fetch(PDO::FETCH_ASSOC);
-// $total_exp = $roow['total_exp'];
-// if (!$total_exp) {
-//   $total_exp = 0;
-// }
-
-// $balance = $total_rev - $total_exp;
-
-// // Récupérer les données mensuelles pour le graphique
-// $current_year = date('Y');
-// $monthly_data = [];
-
-// for ($month = 1; $month <= 12; $month++) {
-//   $month_str = str_pad($month, 2, '0', STR_PAD_LEFT);
-
-//   // Revenus du mois   
-//   $stmt_inc = $pdo->query("SELECT SUM(montant) AS total FROM incomes WHERE YEAR(la_date) = $current_year AND MONTH(la_date) = $month");
-//   $month_income = $stmt_inc->fetch(PDO::FETCH_ASSOC)['total'];
-//   // Dépenses du mois
-//   $stmt_exp = $pdo->query("SELECT SUM(montant) AS total FROM expenses WHERE YEAR(la_date) = $current_year AND MONTH(la_date) = $month");
-//   $month_expense = $stmt_exp->fetch(PDO::FETCH_ASSOC)['total'];
-
-//   $monthly_data[] = [
-//     'month' => date('M', mktime(0, 0, 0, $month, 1)),
-//     'income' => floatval($month_income),
-//     'expense' => floatval($month_expense)
-//   ];
-// }
+$dashboard = new Dashboard($pdo);
+$total_incomes = $dashboard->totalIncomes();
+$total_expences = $dashboard->totalExpences();
+$total_balance=$dashboard->Balance();
 ?>
 
 <!DOCTYPE html>
@@ -91,9 +59,16 @@ foreach($result_incomes as $income){
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { display: ['Manrope', 'sans-serif'] },
-          colors: { primary: '#2563eb' },
-          borderRadius: { 'md-xl': '0.75rem', '2xl': '1rem' },
+          fontFamily: {
+            display: ['Manrope', 'sans-serif']
+          },
+          colors: {
+            primary: '#2563eb'
+          },
+          borderRadius: {
+            'md-xl': '0.75rem',
+            '2xl': '1rem'
+          },
           boxShadow: {
             subtle: '0 6px 18px -8px rgba(16,24,40,0.32), 0 2px 6px rgba(2,6,23,0.06)',
             light: '0 4px 10px rgba(2,6,23,0.04)'
@@ -142,64 +117,64 @@ foreach($result_incomes as $income){
 <body class="font-display text-gray-800 bg-[color:var(--bg)] dark:bg-[color:var(--bg)]">
 
   <script>
-  window.uiTheme = {
-    toggle: function () {
-      const root = document.documentElement;
-      const isDark = root.classList.toggle('dark');
-      root.classList.toggle('light', !isDark);
-      localStorage.setItem('ui-theme', isDark ? 'dark' : 'light');
+    window.uiTheme = {
+      toggle: function() {
+        const root = document.documentElement;
+        const isDark = root.classList.toggle('dark');
+        root.classList.toggle('light', !isDark);
+        localStorage.setItem('ui-theme', isDark ? 'dark' : 'light');
 
-      const icon = document.querySelector("[data-action='toggle-theme'] span");
-      if (icon) icon.textContent = isDark ? 'dark_mode' : 'light_mode';
-    }
-  };
+        const icon = document.querySelector("[data-action='toggle-theme'] span");
+        if (icon) icon.textContent = isDark ? 'dark_mode' : 'light_mode';
+      }
+    };
 
-  window.modal = {
-    open(id) {
-      document.getElementById(id)?.classList.remove("hidden");
-    },
-    close(id) {
-      document.getElementById(id)?.classList.add("hidden");
-    }
-  };
+    window.modal = {
+      open(id) {
+        document.getElementById(id)?.classList.remove("hidden");
+      },
+      close(id) {
+        document.getElementById(id)?.classList.add("hidden");
+      }
+    };
 
-  // ✅ ONE click listener ONLY
-  document.addEventListener("click", function (e) {
-    const el = e.target.closest("[data-action]");
-    if (!el) return;
+    // ✅ ONE click listener ONLY
+    document.addEventListener("click", function(e) {
+      const el = e.target.closest("[data-action]");
+      if (!el) return;
 
-    const action = el.dataset.action;
-    const target = el.dataset.target;
+      const action = el.dataset.action;
+      const target = el.dataset.target;
 
-    switch (action) {
-      case "toggle-theme":
-        window.uiTheme.toggle();
-        break;
+      switch (action) {
+        case "toggle-theme":
+          window.uiTheme.toggle();
+          break;
 
-      case "toggle-sidebar":
-        document.getElementById("mobile-sidebar")?.classList.toggle("hidden");
-        break;
+        case "toggle-sidebar":
+          document.getElementById("mobile-sidebar")?.classList.toggle("hidden");
+          break;
 
-      case "open":
-        if (target) window.modal.open(target);
-        break;
+        case "open":
+          if (target) window.modal.open(target);
+          break;
 
-      case "close":
-        if (target) window.modal.close(target);
-        break;
-    }
-  });
+        case "close":
+          if (target) window.modal.close(target);
+          break;
+      }
+    });
 
-  // Theme load on refresh
-  (function () {
-    const saved =
-      localStorage.getItem("ui-theme") ||
-      (window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light");
+    // Theme load on refresh
+    (function() {
+      const saved =
+        localStorage.getItem("ui-theme") ||
+        (window.matchMedia("(prefers-color-scheme: dark)").matches ?
+          "dark" :
+          "light");
 
-    document.documentElement.classList.add(saved);
-  })();
+      document.documentElement.classList.add(saved);
+    })();
 
 
 
@@ -216,7 +191,7 @@ foreach($result_incomes as $income){
       window.financeChart.update();
     }
 
-    window.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('DOMContentLoaded', function() {
       const ctx = document.getElementById('financeChart');
       if (!ctx) return;
 
@@ -228,8 +203,7 @@ foreach($result_incomes as $income){
         type: 'bar',
         data: {
           labels: monthlyData.map(d => d.month),
-          datasets: [
-            {
+          datasets: [{
               label: 'Incomes',
               data: monthlyData.map(d => d.income),
               backgroundColor: 'rgba(34, 197, 94, 0.7)',
@@ -284,7 +258,7 @@ foreach($result_incomes as $income){
               borderColor: 'rgba(255, 255, 255, 0.1)',
               borderWidth: 1,
               callbacks: {
-                label: function (context) {
+                label: function(context) {
                   return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
                 }
               }
@@ -315,7 +289,7 @@ foreach($result_incomes as $income){
                   family: 'Manrope',
                   size: 11
                 },
-                callback: function (value) {
+                callback: function(value) {
                   return '$' + value.toFixed(0);
                 }
               }
@@ -350,13 +324,13 @@ foreach($result_incomes as $income){
           <span class="font-medium">Dashboard</span>
         </a>
 
-        <a href="affich_inc.php"
+        <a href="affichage_inc.php"
           class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all">
           <span class="material-symbols-outlined">trending_up</span>
           <span class="font-medium">View Incomes</span>
         </a>
 
-        <a href="affich_exp.php"
+        <a href="affichage_exp.php"
           class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all">
           <span class="material-symbols-outlined">trending_down</span>
           <span class="font-medium">View Expenses</span>
@@ -408,13 +382,13 @@ foreach($result_incomes as $income){
             <span class="font-medium">Dashboard</span>
           </a>
 
-          <a href="affich_inc.php"
+          <a href="affichage_inc.php"
             class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all">
             <span class="material-symbols-outlined">trending_up</span>
             <span class="font-medium">View Incomes</span>
           </a>
 
-          <a href="affich_exp.php"
+          <a href="affichage_exp.php"
             class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all">
             <span class="material-symbols-outlined">trending_down</span>
             <span class="font-medium">View Expenses</span>
@@ -474,7 +448,7 @@ foreach($result_incomes as $income){
               <div>
                 <p class="text-sm text-gray-500 dark:text-[color:var(--muted)]">Total Revenues</p>
                 <p class="mt-2 text-2xl font-bold text-green-700 dark:text-green-400">
-                  $<?= number_format($total_incomes, 2) ?></p>
+                  <?= number_format($total_incomes, 2) ?> $</p>
               </div>
               <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-green-50 dark:bg-green-900/30">
                 <span class="material-symbols-outlined text-green-600 dark:text-green-400">payments</span>
@@ -487,7 +461,8 @@ foreach($result_incomes as $income){
             <div class="flex items-start justify-between gap-4">
               <div>
                 <p class="text-sm text-gray-500 dark:text-[color:var(--muted)]">Total Expenses</p>
-                <p class="mt-2 text-2xl font-bold text-red-700 dark:text-red-400">$
+                <p class="mt-2 text-2xl font-bold text-red-700 dark:text-red-400">
+                  <?= number_format($total_expences, 2) ?>$
                 </p>
               </div>
               <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-red-50 dark:bg-red-900/30">
@@ -503,7 +478,7 @@ foreach($result_incomes as $income){
                 <p class="text-sm text-gray-500 dark:text-[color:var(--muted)]">Current Balance</p>
                 <p
                   class="mt-2 text-2xl font-bold text-[color:var(--accent-light)] dark:text-transparent bg-clip-text dark:bg-gradient-to-r dark:from-[color:var(--accent-dark-from)] dark:to-[color:var(--accent-dark-to)]">
-                  $</p>
+                  <?= number_format($total_balance, 2) ?>$ </p>
               </div>
               <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50 dark:bg-blue-900/30">
                 <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">savings</span>
@@ -574,31 +549,40 @@ foreach($result_incomes as $income){
                 // $recent_transactions = $recent_stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 // if (empty($recent_transactions)):
-                  ?>
-                  <tr>
-                    <td colspan="3" class="px-4 py-8 text-center text-gray-500 dark:text-[color:var(--muted)]">
-                      No transactions yet
-                    </td>
-                  </tr>
-                <!-- <?php //else: ?> -->
-                  <?php //foreach ($recent_transactions as $trans): ?>
-                    <tr
-                      class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                      <td class="px-4 py-4">
-                        <p class="font-semibold text-gray-900 dark:text-white">
-                          <?php //htmlspecialchars($trans['descreption']) ?>
-                        </p>
-                      </td>
-                      <td
-                        class="px-4 py-4 text-right font-semibold <?php //$trans['type'] === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400' ?>">
-                        <?php //$trans['type'] === 'income' ? '+' : '-' ?>$<?php //number_format($trans['montant'], 2) ?>
-                      </td>
-                      <td class="px-4 py-4 text-sm text-gray-500 dark:text-[color:var(--muted)]">
-                        <?php //date('M d, Y', strtotime($trans['la_date'])) ?>
-                      </td>
-                    </tr>
-                  <?php //endforeach; ?>
-                <?php //endif; ?>
+                ?>
+                <tr>
+                  <td colspan="3" class="px-4 py-8 text-center text-gray-500 dark:text-[color:var(--muted)]">
+                    No transactions yet
+                  </td>
+                </tr>
+                <!-- <?php //else: 
+                      ?> -->
+                <?php //foreach ($recent_transactions as $trans): 
+                ?>
+                <tr
+                  class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                  <td class="px-4 py-4">
+                    <p class="font-semibold text-gray-900 dark:text-white">
+                      <?php //htmlspecialchars($trans['descreption']) 
+                      ?>
+                    </p>
+                  </td>
+                  <td
+                    class="px-4 py-4 text-right font-semibold <?php //$trans['type'] === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400' 
+                                                              ?>">
+                    <?php //$trans['type'] === 'income' ? '+' : '-' 
+                    ?>$<?php //number_format($trans['montant'], 2) 
+                        ?>
+                  </td>
+                  <td class="px-4 py-4 text-sm text-gray-500 dark:text-[color:var(--muted)]">
+                    <?php //date('M d, Y', strtotime($trans['la_date'])) 
+                    ?>
+                  </td>
+                </tr>
+                <?php //endforeach; 
+                ?>
+                <?php //endif; 
+                ?>
               </tbody>
             </table>
           </div>
@@ -641,6 +625,17 @@ foreach($result_incomes as $income){
               required />
           </div>
           <div>
+            <label class="text-sm text-gray-600 dark:text-[color:var(--muted)]">Category</label>
+            <select class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 focus-ring" name="category_type" required>
+              <option class="text-gray-300" value="" disabled selected hidden>Select Category</option>
+              <?php foreach ($incomeCategory as $inc):?>
+              <option value="<?= $inc['id'] ?>">
+                  <?= $inc['name_type'] ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div>
             <label class="text-sm text-gray-600 dark:text-[color:var(--muted)]">Description</label>
             <textarea name="descreption_inc"
               class="h-20 w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 focus-ring"
@@ -662,7 +657,7 @@ foreach($result_incomes as $income){
           <button class="p-2 rounded-md" data-action="close" data-target="modal-expense"><span
               class="material-symbols-outlined">close</span></button>
         </div>
-        <form method="POST" action="traitement.php" class="grid grid-cols-1 gap-3">
+        <form method="POST" action="" class="grid grid-cols-1 gap-3">
           <div>
             <label class="text-sm text-gray-600 dark:text-[color:var(--muted)]">Date</label>
             <input type="date" name="date_exp"
@@ -675,22 +670,19 @@ foreach($result_incomes as $income){
           </div>
           <div>
             <label class="text-sm text-gray-600 dark:text-[color:var(--muted)]">Category</label>
-                <select class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 focus-ring" name="categorie_id" required>
-                <option class="text-gray-300" value="" disabled selected hidden>Select Category</option>
-                <?php
-                // Fetch categories
-                $stmt = $pdo->prepare("SELECT name_type FROM categories");
-                $stmt->execute();
-                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                // Display options
-                foreach ($rows as $row) {
-                    echo '<option value="' . htmlspecialchars($row['name_type']) . '">' . htmlspecialchars($row['name_type']) . '</option>';
-                }
-                ?>
-                <option value="<?php// $cat->getId() ?>"><?php //htmlspecialchars($cat->getName()) ?></option>
-                <?php //endforeach; ?>
+            <select class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 focus-ring" name="category_type" required>
+              <option class="text-gray-300" value="" disabled selected hidden>Select Category</option>
+              <?php foreach ($expenseCategory as $exp): ?>
+                <option value="<?= $exp['id'] ?>">
+                    <?= $exp['name_type'] ?></option>
+              <?php endforeach; ?>
             </select>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 dark:text-[color:var(--muted)]">Description</label>
+            <textarea name="descreption_exp"
+              class="h-20 w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 focus-ring"
+              required></textarea>
           </div>
           <button type="submit" name="save_exp" class="px-4 py-2 rounded-xl text-white"
             style="background: linear-gradient(90deg,var(--accent-light),#4f46e5);">Save</button>
@@ -722,7 +714,7 @@ foreach($result_incomes as $income){
             <a type="button" href="logout.php"
               class="flex-1 px-4 py-2.5 rounded-xl text-white bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition font-medium">
               Logout
-                  </a>
+            </a>
           </div>
         </div>
       </div>

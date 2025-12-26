@@ -46,3 +46,18 @@ INSERT INTO categories (id,name_type) VALUES
     (5,'Health'),
     (6,'Education'),
     (7,'Shopping')
+
+ALTER TABLE categories ADD COLUMN 
+    category_type ENUM('income','expense') NOT NULL
+
+UPDATE categories SET category_type ='expense';
+
+INSERT INTO categories(name_type,category_type)
+VALUES 
+('Salaire','income'),
+('Freelance','income'),
+('Bonus','income'),
+('Gifts','income');
+
+ALTER TABLE expenses ADD COLUMN
+descreption VARCHAR(250) NOT NULL; 
